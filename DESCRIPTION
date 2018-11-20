@@ -1,0 +1,14 @@
+Package: CapVR
+Type: Package
+Title: Capacitated vehicle routing using Genetic Algorithm
+Version: 0.1.0
+Author: Supratim Chaudhuri
+Maintainer: Supratim Chaudhuri <supratim1121992@gmail.com>
+Description: The package enables users to perform capacitated vehicle routing optimising the total distance covered.
+    A local search algorithm is first employed to generate an example solution for the Genetic algorithm so as to speed 
+    up the GA convergence.
+Depends: data.table, GA
+License: Personal
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 6.1.0
