@@ -15,6 +15,8 @@ GA_Route(loc_data, dist_mat, min_cap, init_node, sug_sol = NULL,
 
 \item{min_cap}{The minimum number of people that should be allotted to each vehicle.}
 
+\item{init_node}{The name of the starting point/node.}
+
 \item{sug_sol}{Optional suggested solution to initiate the GA. The vectorised output from the LS_Route function should ideally be used.}
 
 \item{mxiter}{Maximum number of iterations for which the GA should be run. 50000 by default.}
@@ -26,8 +28,6 @@ GA_Route(loc_data, dist_mat, min_cap, init_node, sug_sol = NULL,
 \item{converge}{The maximum number of iterations to be run before stopping the GA if there is no improvement in the solution. 5000 by default.}
 
 \item{re_eval}{Should the GA solution be re-evaluated for further optimisation.}
-
-\item{init}{The name of the starting point/node.}
 }
 \value{
 A list with the optimised vehicle routes and the total distance.

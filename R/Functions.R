@@ -139,7 +139,7 @@ LS_Route<-function(loc_data,loc_code,min_cap,dist_mat,time_mat,init_node){
 #' @param loc_data A data frame with the nodal points and the corresponding number of people to be dropped/picked up from the nodes.
 #' @param dist_mat The distance matrix to be used. Dimensions should be Px(P+1), where P is the number of nodes.
 #' @param min_cap The minimum number of people that should be allotted to each vehicle.
-#' @param init The name of the starting point/node.
+#' @param init_node The name of the starting point/node.
 #' @param sug_sol Optional suggested solution to initiate the GA. The vectorised output from the LS_Route function should ideally be used.
 #' @param mxiter Maximum number of iterations for which the GA should be run. 50000 by default.
 #' @param mut_rate The rate of mutation to be used. 0.2 by default.
@@ -157,7 +157,7 @@ GA_Route<-function(loc_data,dist_mat,min_cap,init_node,sug_sol = NULL,mxiter = 5
   dt_pick<-as.data.table(loc_data)
   colnames(dt_pick)<-c("PickupCode","Employees")
   D<-as.data.frame(dist_mat)
-  rownames(D)<-dist_mat[,1]
+  rownames(D)<-D[,1]
   D<-D[,-1]
 
   P<-character()
@@ -189,7 +189,7 @@ GA_Route<-function(loc_data,dist_mat,min_cap,init_node,sug_sol = NULL,mxiter = 5
 
   if(is.null(sug_sol) == T){
     mod_ga<-ga(type = "permutation",fitness = fitness,lower = 1,upper = length(P),maxiter = mxiter,
-               pmutation = mut_rate,pcrossover = crs_rate,run = converge)
+               pmutation = mut_rate,pcrossover = crs_rate,run = converge,monitor = plot)
   }
 
   else {
@@ -199,8 +199,8 @@ GA_Route<-function(loc_data,dist_mat,min_cap,init_node,sug_sol = NULL,mxiter = 5
       sol[i]<-pos[which(pos %in% sol == F)[1]]
     }
 
-    mod_ga<-ga(type = "permutation",fitness = fitness,lower = 1,upper = length(P),maxiter = mxiter,
-                 pmutation = mut_rate,pcrossover = crs_rate,run = converge,suggestions = matrix(data = sol,ncol = length(sol),nrow = 1))
+    mod_ga<-ga(type = "permutation",fitness = fitness,lower = 1,upper = length(P),maxiter = mxiter,monitor = T,
+               pmutation = mut_rate,pcrossover = crs_rate,run = converge,suggestions = matrix(data = sol,ncol = length(sol),nrow = 1))
   }
 
   dist<-function(x){
@@ -226,31 +226,32 @@ GA_Route<-function(loc_data,dist_mat,min_cap,init_node,sug_sol = NULL,mxiter = 5
   }
 
   else {
-    multi_ga<-function(x){
-      route<-x
-      opt_cab<-function(x){
-        n<-O
-        cab_dist<-numeric()
-        x<-route[x]
-        for(i in 1:length(x)){
-          cab_dist[i]<-D[n,x[i]]
-          n<-x[i]
-        }
-        return(sum(cab_dist))
-      }
-      fitness_2<-function(x){
-        -opt_cab(x)
-      }
+    cat("Attempting further optimisation. This may take a while.\n")
+    multi_ga<-function(l){
+      route<-l
       tryCatch(expr = {
+        opt_cab<-function(x){
+          n<-init_node
+          cab_dist<-numeric()
+          x<-route[x]
+          for(i in 1:length(x)){
+            cab_dist[i]<-D[n,x[i]]
+            n<-x[i]
+          }
+          return(sum(cab_dist))
+        }
+        fitness_2<-function(x){
+          -opt_cab(x)
+        }
         mod_cab<-ga(type = "permutation",fitness = fitness_2,lower = 1,upper = length(route),
-                    pcrossover = 0.8,pmutation = 0.2,maxiter = 1000,
+                    pcrossover = crs_rate,pmutation = mut_rate,run = 1000,
                     suggestions = matrix(data = 1:length(route),nrow = 1,ncol = length(route)))
         sol<-route[as.numeric(mod_cab@solution[1,])]
-      },error = function(e){
-        sol<-x
-      })
 
-      return(sol)
+        return(sol)
+      },error = function(e){
+        return(l)
+      })
     }
 
     res<-lapply(X = ga_sol$Solution,FUN = multi_ga)
