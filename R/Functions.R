@@ -226,7 +226,6 @@ GA_Route<-function(loc_data,dist_mat,min_cap,init_node,sug_sol = NULL,mxiter = 5
   }
 
   else {
-    cat("Attempting further optimisation. This may take a while.\n")
     multi_ga<-function(l){
       route<-l
       tryCatch(expr = {
@@ -244,7 +243,7 @@ GA_Route<-function(loc_data,dist_mat,min_cap,init_node,sug_sol = NULL,mxiter = 5
           -opt_cab(x)
         }
         mod_cab<-ga(type = "permutation",fitness = fitness_2,lower = 1,upper = length(route),
-                    pcrossover = crs_rate,pmutation = mut_rate,run = 1000,
+                    pcrossover = crs_rate,pmutation = mut_rate,maxiter = 1000,
                     suggestions = matrix(data = 1:length(route),nrow = 1,ncol = length(route)))
         sol<-route[as.numeric(mod_cab@solution[1,])]
 
