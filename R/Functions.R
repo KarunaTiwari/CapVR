@@ -7,12 +7,12 @@
 #' @param dist_mat The distance matrix to be used. Dimensions should be Px(P+1), where P is the number of nodes.
 #' @param time_mat The time matrix to be used. Dimensions should be Px(P+1), where P is the number of nodes.
 #' @param loc_code The column number/name in dist_mat which contains the nodal points.
-#' @param init The name of the starting point/node.
+#' @param init_node The name of the starting point/node.
 #' @return A list containing tables for each cab allocation along with distance and time computed.
 #' The list also contains a vectorised solution which can be fed into the GA based routing algorithm.
 #' @export
 
-LS_Route<-function(loc_data,loc_code,min_cap,dist_mat,time_mat,init){
+LS_Route<-function(loc_data,loc_code,min_cap,dist_mat,time_mat,init_node){
 
   require(data.table)
 
@@ -31,7 +31,7 @@ LS_Route<-function(loc_data,loc_code,min_cap,dist_mat,time_mat,init){
   dist_mat<-dist_mat[,-pick,with = F]
   time_mat<-time_mat[,-pick,with = F]
 
-  rem_pick<-dt$PickupCode[which(dt$Employees <= 0 & dt$PickupCode != init)]
+  rem_pick<-dt$PickupCode[which(dt$Employees <= 0 & dt$PickupCode != init_node)]
   rem_mat<-which(colnames(dist_mat) %in% rem_pick)
   dist_mat<-dist_mat[-(rem_mat),-(rem_mat),with = F]
   time_mat<-time_mat[-(rem_mat),-(rem_mat),with = F]
@@ -41,7 +41,7 @@ LS_Route<-function(loc_data,loc_code,min_cap,dist_mat,time_mat,init){
   r<-1
 
   while(sum(dt$Employees) > 0){
-    init<-which(colnames(dist_mat) == init)
+    init<-which(colnames(dist_mat) == init_node)
     cab_cnt<-0
     w<-1
     stop_dist<-emp_add<-stop_time<-numeric()
@@ -56,7 +56,7 @@ LS_Route<-function(loc_data,loc_code,min_cap,dist_mat,time_mat,init){
         stop_time<-c(stop_time,visit_t[stop])
       }
       else{
-        stop<-names(visit[-which(names(visit) == init)])[which.min(visit[-which(names(visit) == init)])]
+        stop<-names(visit[-which(names(visit) == init_node)])[which.min(visit[-which(names(visit) == init_node)])]
         stop_dist<-c(stop_dist,(visit[stop] + stop_dist[length(stop_dist)]))
         stop_time<-c(stop_time,(visit_t[stop] + stop_time[length(stop_time)]))
       }
@@ -103,6 +103,7 @@ LS_Route<-function(loc_data,loc_code,min_cap,dist_mat,time_mat,init){
     res_list[[r]]<-res_int
     r<-r+1
   }
+
   names(res_list)<-paste("Cab",1:length(res_list),sep = "-")
   res_list_2<-lapply(X = res_list,FUN = function(x){
     zer<-which(x$Employees == 0)
@@ -130,7 +131,6 @@ LS_Route<-function(loc_data,loc_code,min_cap,dist_mat,time_mat,init){
 
 }
 
-
 #' Vehicle routing using Genetic algorithm.
 #'
 #' GA is implemented to determine the best routes so as to minimise the total distance covered by all vehicles.
@@ -149,7 +149,7 @@ LS_Route<-function(loc_data,loc_code,min_cap,dist_mat,time_mat,init){
 #' @return A list with the optimised vehicle routes and the total distance.
 #' @export
 
-GA_Route<-function(loc_data,dist_mat,min_cap,init,sug_sol = NULL,mxiter = 50000,mut_rate = 0.2,crs_rate = 0.8,converge = 5000,re_eval = T){
+GA_Route<-function(loc_data,dist_mat,min_cap,init_node,sug_sol = NULL,mxiter = 50000,mut_rate = 0.2,crs_rate = 0.8,converge = 5000,re_eval = T){
 
   require(data.table)
   require(GA)
@@ -171,7 +171,7 @@ GA_Route<-function(loc_data,dist_mat,min_cap,init,sug_sol = NULL,mxiter = 50000,
       P[x]
     })
     lsd<-lapply(X = ls,FUN = function(x){
-      n<-init
+      n<-init_node
       d<-numeric()
       for(i in 1:length(x)){
         d[i]<-D[n,x[i]]
@@ -207,7 +207,7 @@ GA_Route<-function(loc_data,dist_mat,min_cap,init,sug_sol = NULL,mxiter = 50000,
     ls<-split(x, ceiling(seq_along(x)/min_cap))
     names(ls)<-paste("Cab",1:length(ls),sep = "-")
     lsd<-lapply(X = ls,FUN = function(x){
-      n<-init
+      n<-init_node
       d<-numeric()
       for(i in 1:length(x)){
         d[i]<-D[n,x[i]]

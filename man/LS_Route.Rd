@@ -4,7 +4,7 @@
 \alias{LS_Route}
 \title{Vehicle routing using local search}
 \usage{
-LS_Route(loc_data, loc_code, min_cap, dist_mat, time_mat, init)
+LS_Route(loc_data, loc_code, min_cap, dist_mat, time_mat, init_node)
 }
 \arguments{
 \item{loc_data}{A data frame with the nodal points and the corresponding number of people to be dropped/picked up from the nodes.}
@@ -17,7 +17,7 @@ LS_Route(loc_data, loc_code, min_cap, dist_mat, time_mat, init)
 
 \item{time_mat}{The time matrix to be used. Dimensions should be Px(P+1), where P is the number of nodes.}
 
-\item{init}{The name of the starting point/node.}
+\item{init_node}{The name of the starting point/node.}
 }
 \value{
 A list containing tables for each cab allocation along with distance and time computed.
